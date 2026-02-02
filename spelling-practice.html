@@ -1,0 +1,186 @@
+<script>
+let profiles = ["Zwala", "Ganga", "Poonam"];
+let currentProfile = "";
+let words = [];
+let sessionWords = [];
+let currentIndex = 0;
+let currentWord = "";
+let practicedThisSession = new Set();
+
+// PINs for each profile
+const profilePINs = {
+    "Zwala": "321",
+    "Ganga": "654",
+    "Poonam": "987"
+};
+
+// Load words for current profile
+function loadWords() {
+    if (!currentProfile) return;
+    words = JSON.parse(localStorage.getItem("words_" + currentProfile)) || [];
+}
+
+// Save words for current profile
+function saveWords() {
+    if (!currentProfile) return;
+    localStorage.setItem("words_" + currentProfile, JSON.stringify(words));
+}
+
+// Profile switch with PIN verification
+function switchProfile() {
+    const selected = document.getElementById("profileSelect").value;
+    if (!selected) return;
+
+    const enteredPIN = prompt(`Enter PIN for ${selected}:`);
+    if (enteredPIN === profilePINs[selected]) {
+        currentProfile = selected;
+        loadWords();
+        sessionWords = [];
+        currentIndex = 0;
+        practicedThisSession.clear();
+        document.getElementById("practiceArea").classList.add("hidden");
+        document.getElementById("wordListBox").classList.add("hidden");
+        updateProgress();
+        alert(`✅ Access granted for ${currentProfile}`);
+        // Save last profile to localStorage
+        localStorage.setItem("lastProfile", currentProfile);
+    } else {
+        alert("❌ Incorrect PIN! Access denied.");
+        document.getElementById("profileSelect").value = ""; // reset selection
+        currentProfile = "";
+        words = [];
+        sessionWords = [];
+    }
+}
+
+// Add new word
+function addWord() {
+    if (!currentProfile) {
+        alert("Please select a profile first.");
+        return;
+    }
+    const input = document.getElementById("newWord");
+    const word = input.value.trim().toLowerCase();
+    if (word && !words.includes(word)) {
+        words.push(word);
+        saveWords();
+    }
+    input.value = "";
+    updateWordListDisplay();
+}
+
+// Start practice session
+function startPractice() {
+    if (!currentProfile) {
+        alert("Please select a profile first.");
+        return;
+    }
+    if (words.length === 0) {
+        alert("Please add some words first.");
+        return;
+    }
+    sessionWords = [...words].sort(() => Math.random() - 0.5);
+    currentIndex = 0;
+    practicedThisSession.clear();
+
+    document.getElementById("practiceArea").classList.remove("hidden");
+    speakCurrentWord();
+}
+
+// Speak current word
+function speakCurrentWord() {
+    currentWord = sessionWords[currentIndex];
+    const utterance = new SpeechSynthesisUtterance(currentWord);
+    utterance.lang = "en-US";
+    speechSynthesis.speak(utterance);
+
+    document.getElementById("userInput").value = "";
+    document.getElementById("feedback").textContent = "";
+    document.getElementById("feedback").className = "feedback";
+    document.getElementById("answer").textContent = "";
+    document.getElementById("showBtn").classList.add("hidden");
+
+    practicedThisSession.add(currentWord);
+    updateProgress();
+}
+
+// Move to next word
+function nextWord() {
+    if (currentIndex < sessionWords.length - 1) {
+        currentIndex++;
+        speakCurrentWord();
+    } else {
+        alert("🎉 You have practiced all listed words!");
+    }
+}
+
+// Update progress bar
+function updateProgress() {
+    const practicedCount = practicedThisSession.size;
+    const total = words.length;
+    const percent = total === 0 ? 0 : (practicedCount / total) * 100;
+
+    document.getElementById("progressFill").style.width = percent + "%";
+    document.getElementById("progressText").textContent =
+        practicedCount + " / " + total;
+}
+
+// Check spelling
+function checkSpelling() {
+    const input = document.getElementById("userInput").value.trim().toLowerCase();
+    const feedback = document.getElementById("feedback");
+
+    if (input === currentWord) {
+        feedback.textContent = "Correct";
+        feedback.classList.add("correct");
+    } else {
+        feedback.textContent = "Incorrect";
+        feedback.classList.add("incorrect");
+        document.getElementById("showBtn").classList.remove("hidden");
+    }
+}
+
+// Show correct spelling
+function showAnswer() {
+    document.getElementById("answer").textContent =
+        "Correct spelling: " + currentWord;
+}
+
+// Toggle word list display
+function toggleWordList() {
+    const box = document.getElementById("wordListBox");
+
+    if (box.classList.contains("hidden")) {
+        updateWordListDisplay();
+        box.classList.remove("hidden");
+    } else {
+        box.classList.add("hidden");
+    }
+}
+
+// Update word list content
+function updateWordListDisplay() {
+    const box = document.getElementById("wordListBox");
+    box.innerHTML = words.length
+        ? "<strong>Listed Words for " + currentProfile + ":</strong><br>" + words.join(", ")
+        : "No words added yet.";
+}
+
+// --- Auto-load last profile on page refresh ---
+window.onload = function() {
+    const lastProfile = localStorage.getItem("lastProfile");
+    if (lastProfile && profiles.includes(lastProfile)) {
+        const enteredPIN = prompt(`Enter PIN for ${lastProfile} to access your profile:`);
+        if (enteredPIN === profilePINs[lastProfile]) {
+            currentProfile = lastProfile;
+            document.getElementById("profileSelect").value = currentProfile;
+            loadWords();
+            updateProgress();
+            alert(`✅ Welcome back, ${currentProfile}`);
+        } else {
+            alert("❌ Incorrect PIN! Access denied.");
+            document.getElementById("profileSelect").value = "";
+        }
+    }
+};
+</script>
