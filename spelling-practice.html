@@ -8,40 +8,57 @@
 <style>
 body {
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    background: #ffffff;
     margin: 0;
     padding: 16px;
-    color: #fff;
+    color: #333;
 }
 
-h2 {
+/* Header */
+.header {
     text-align: center;
     margin-bottom: 16px;
+    font-size: 26px;
+    font-weight: 700;
 }
 
+.header .pte {
+    color: #0b3c5d; /* Dark Blue */
+}
+
+.header .guide {
+    color: #d4af37; /* Golden */
+}
+
+/* Card layout */
 .card {
     background: #ffffff;
-    color: #333;
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 16px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.12);
 }
 
+/* Unified input & button sizing */
 button, select, input {
     width: 100%;
-    padding: 12px;
+    height: 46px;
+    padding: 0 12px;
     margin-top: 8px;
     font-size: 16px;
     border-radius: 8px;
-    border: none;
+    box-sizing: border-box;
 }
 
+/* Inputs */
 select, input {
     border: 1px solid #ccc;
+    background: #fff;
 }
 
+/* Buttons */
 button {
+    border: none;
     background: #007bff;
     color: #fff;
     font-weight: 600;
@@ -67,12 +84,14 @@ button.success:hover {
     background: #1e7e34;
 }
 
+/* Utility */
 .hidden {
     display: none;
 }
 
+/* Feedback */
 .feedback {
-    margin-top: 8px;
+    margin-top: 10px;
     font-weight: bold;
     text-align: center;
 }
@@ -85,13 +104,14 @@ button.success:hover {
     color: #dc3545;
 }
 
+/* Progress bar */
 #progressBar {
     width: 100%;
     height: 12px;
-    background: #ddd;
+    background: #e0e0e0;
     border-radius: 6px;
     overflow: hidden;
-    margin-top: 8px;
+    margin-top: 10px;
 }
 
 #progressFill {
@@ -102,12 +122,11 @@ button.success:hover {
 
 #progressText {
     text-align: center;
-    margin-top: 4px;
+    margin-top: 6px;
     font-size: 14px;
 }
 
 #wordListBox {
-    margin-top: 8px;
     font-size: 14px;
 }
 </style>
@@ -115,7 +134,10 @@ button.success:hover {
 
 <body>
 
-<h2>PTEGuide.com<br>Spelling Practice</h2>
+<div class="header">
+    <span class="pte">PTE</span><span class="guide">Guide.com</span><br>
+    Spelling Practice
+</div>
 
 <div class="card">
     <select id="profileSelect" onchange="switchProfile()">
