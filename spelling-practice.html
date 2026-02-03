@@ -8,66 +8,148 @@
 <style>
 body {
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    margin: 0;
     padding: 16px;
-    background: #f5f5f5;
+    color: #fff;
 }
+
+h2 {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.card {
+    background: #ffffff;
+    color: #333;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
 button, select, input {
-    font-size: 16px;
-    padding: 10px;
-    margin: 6px 0;
     width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
 }
-.hidden { display: none; }
-.feedback.correct { color: green; }
-.feedback.incorrect { color: red; }
+
+select, input {
+    border: 1px solid #ccc;
+}
+
+button {
+    background: #007bff;
+    color: #fff;
+    font-weight: 600;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+button.secondary {
+    background: #6c757d;
+}
+
+button.secondary:hover {
+    background: #545b62;
+}
+
+button.success {
+    background: #28a745;
+}
+
+button.success:hover {
+    background: #1e7e34;
+}
+
+.hidden {
+    display: none;
+}
+
+.feedback {
+    margin-top: 8px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.feedback.correct {
+    color: #28a745;
+}
+
+.feedback.incorrect {
+    color: #dc3545;
+}
+
 #progressBar {
     width: 100%;
     height: 12px;
     background: #ddd;
     border-radius: 6px;
     overflow: hidden;
+    margin-top: 8px;
 }
+
 #progressFill {
     height: 100%;
     width: 0%;
-    background: #4caf50;
+    background: linear-gradient(90deg, #28a745, #7CFC00);
+}
+
+#progressText {
+    text-align: center;
+    margin-top: 4px;
+    font-size: 14px;
+}
+
+#wordListBox {
+    margin-top: 8px;
+    font-size: 14px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>PTEGuide.com – Spelling Practice</h2>
+<h2>PTEGuide.com<br>Spelling Practice</h2>
 
-<select id="profileSelect" onchange="switchProfile()">
-    <option value="">Select Profile</option>
-    <option>Zwala</option>
-    <option>Ganga</option>
-    <option>Poonam</option>
-</select>
+<div class="card">
+    <select id="profileSelect" onchange="switchProfile()">
+        <option value="">Select Profile</option>
+        <option>Zwala</option>
+        <option>Ganga</option>
+        <option>Poonam</option>
+    </select>
 
-<input id="newWord" placeholder="Add new word">
-<button onclick="addWord()">Add Word</button>
+    <input id="newWord" placeholder="Add new word">
+    <button class="success" onclick="addWord()">Add Word</button>
 
-<button onclick="startPractice()">Start Practice</button>
-<button onclick="toggleWordList()">Show Word List</button>
+    <button onclick="startPractice()">Start Practice</button>
+    <button class="secondary" onclick="toggleWordList()">Show Word List</button>
 
-<div id="progressBar">
-    <div id="progressFill"></div>
+    <div id="progressBar">
+        <div id="progressFill"></div>
+    </div>
+    <div id="progressText"></div>
 </div>
-<div id="progressText"></div>
 
-<div id="practiceArea" class="hidden">
-    <input id="userInput" placeholder="Type spelling">
+<div id="practiceArea" class="card hidden">
+    <input id="userInput" placeholder="Type the spelling here">
     <button onclick="checkSpelling()">Check</button>
-    <button onclick="speakCurrentWord()">🔊 Play Word</button>
+    <button class="secondary" onclick="speakCurrentWord()">🔊 Play Word</button>
     <button onclick="nextWord()">Next</button>
+
     <div id="feedback" class="feedback"></div>
-    <button id="showBtn" class="hidden" onclick="showAnswer()">Show Answer</button>
+
+    <button id="showBtn" class="secondary hidden" onclick="showAnswer()">Show Answer</button>
     <div id="answer"></div>
 </div>
 
-<div id="wordListBox" class="hidden"></div>
+<div id="wordListBox" class="card hidden"></div>
 
 <script>
 let profiles = ["Zwala", "Ganga", "Poonam"];
@@ -131,7 +213,7 @@ function startPractice() {
 }
 
 function speakCurrentWord() {
-    speechSynthesis.cancel(); // 🔥 REQUIRED FOR iOS
+    speechSynthesis.cancel();
     currentWord = sessionWords[currentIndex];
     const u = new SpeechSynthesisUtterance(currentWord);
     u.lang = "en-US";
@@ -148,16 +230,16 @@ function nextWord() {
         currentIndex++;
         speakCurrentWord();
     } else {
-        alert("All words practiced!");
+        alert("🎉 You have practiced all words!");
     }
 }
 
 function checkSpelling() {
     if (userInput.value.trim().toLowerCase() === currentWord) {
-        feedback.textContent = "Correct";
+        feedback.textContent = "Correct ✔";
         feedback.className = "feedback correct";
     } else {
-        feedback.textContent = "Incorrect";
+        feedback.textContent = "Incorrect ✖";
         feedback.className = "feedback incorrect";
         showBtn.classList.remove("hidden");
     }
@@ -180,8 +262,8 @@ function toggleWordList() {
 
 function updateWordListDisplay() {
     wordListBox.innerHTML = words.length
-        ? "<b>Words:</b><br>" + words.join(", ")
-        : "No words added";
+        ? "<strong>Listed Words:</strong><br>" + words.join(", ")
+        : "No words added yet.";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
