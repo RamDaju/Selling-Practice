@@ -1,3 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spelling Practice – PTEGuide.com</title>
+
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 16px;
+    background: #f5f5f5;
+}
+button, select, input {
+    font-size: 16px;
+    padding: 10px;
+    margin: 6px 0;
+    width: 100%;
+}
+.hidden { display: none; }
+.feedback.correct { color: green; }
+.feedback.incorrect { color: red; }
+#progressBar {
+    width: 100%;
+    height: 12px;
+    background: #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+}
+#progressFill {
+    height: 100%;
+    width: 0%;
+    background: #4caf50;
+}
+</style>
+</head>
+
+<body>
+
+<h2>PTEGuide.com – Spelling Practice</h2>
+
+<select id="profileSelect" onchange="switchProfile()">
+    <option value="">Select Profile</option>
+    <option>Zwala</option>
+    <option>Ganga</option>
+    <option>Poonam</option>
+</select>
+
+<input id="newWord" placeholder="Add new word">
+<button onclick="addWord()">Add Word</button>
+
+<button onclick="startPractice()">Start Practice</button>
+<button onclick="toggleWordList()">Show Word List</button>
+
+<div id="progressBar">
+    <div id="progressFill"></div>
+</div>
+<div id="progressText"></div>
+
+<div id="practiceArea" class="hidden">
+    <input id="userInput" placeholder="Type spelling">
+    <button onclick="checkSpelling()">Check</button>
+    <button onclick="speakCurrentWord()">🔊 Play Word</button>
+    <button onclick="nextWord()">Next</button>
+    <div id="feedback" class="feedback"></div>
+    <button id="showBtn" class="hidden" onclick="showAnswer()">Show Answer</button>
+    <div id="answer"></div>
+</div>
+
+<div id="wordListBox" class="hidden"></div>
+
 <script>
 let profiles = ["Zwala", "Ganga", "Poonam"];
 let currentProfile = "";
@@ -7,180 +78,119 @@ let currentIndex = 0;
 let currentWord = "";
 let practicedThisSession = new Set();
 
-// PINs for each profile
 const profilePINs = {
-    "Zwala": "321",
-    "Ganga": "654",
-    "Poonam": "987"
+    Zwala: "321",
+    Ganga: "654",
+    Poonam: "987"
 };
 
-// Load words for current profile
 function loadWords() {
-    if (!currentProfile) return;
     words = JSON.parse(localStorage.getItem("words_" + currentProfile)) || [];
 }
 
-// Save words for current profile
 function saveWords() {
-    if (!currentProfile) return;
     localStorage.setItem("words_" + currentProfile, JSON.stringify(words));
 }
 
-// Profile switch with PIN verification
 function switchProfile() {
-    const selected = document.getElementById("profileSelect").value;
+    const selected = profileSelect.value;
     if (!selected) return;
 
-    const enteredPIN = prompt(`Enter PIN for ${selected}:`);
-    if (enteredPIN === profilePINs[selected]) {
-        currentProfile = selected;
-        loadWords();
-        sessionWords = [];
-        currentIndex = 0;
-        practicedThisSession.clear();
-        document.getElementById("practiceArea").classList.add("hidden");
-        document.getElementById("wordListBox").classList.add("hidden");
-        updateProgress();
-        alert(`✅ Access granted for ${currentProfile}`);
-        // Save last profile to localStorage
-        localStorage.setItem("lastProfile", currentProfile);
-    } else {
-        alert("❌ Incorrect PIN! Access denied.");
-        document.getElementById("profileSelect").value = ""; // reset selection
-        currentProfile = "";
-        words = [];
-        sessionWords = [];
-    }
-}
-
-// Add new word
-function addWord() {
-    if (!currentProfile) {
-        alert("Please select a profile first.");
+    const pin = prompt(`Enter PIN for ${selected}`);
+    if (pin !== profilePINs[selected]) {
+        alert("Incorrect PIN");
+        profileSelect.value = "";
         return;
     }
-    const input = document.getElementById("newWord");
-    const word = input.value.trim().toLowerCase();
-    if (word && !words.includes(word)) {
-        words.push(word);
+
+    currentProfile = selected;
+    localStorage.setItem("lastProfile", currentProfile);
+    loadWords();
+    updateProgress();
+    alert(`Welcome ${currentProfile}`);
+}
+
+function addWord() {
+    if (!currentProfile) return alert("Select profile first");
+    const w = newWord.value.trim().toLowerCase();
+    if (w && !words.includes(w)) {
+        words.push(w);
         saveWords();
     }
-    input.value = "";
+    newWord.value = "";
     updateWordListDisplay();
 }
 
-// Start practice session
 function startPractice() {
-    if (!currentProfile) {
-        alert("Please select a profile first.");
-        return;
-    }
-    if (words.length === 0) {
-        alert("Please add some words first.");
-        return;
-    }
+    if (!words.length) return alert("Add words first");
     sessionWords = [...words].sort(() => Math.random() - 0.5);
     currentIndex = 0;
     practicedThisSession.clear();
-
-    document.getElementById("practiceArea").classList.remove("hidden");
+    practiceArea.classList.remove("hidden");
     speakCurrentWord();
 }
 
-// Speak current word
 function speakCurrentWord() {
+    speechSynthesis.cancel(); // 🔥 REQUIRED FOR iOS
     currentWord = sessionWords[currentIndex];
-    const utterance = new SpeechSynthesisUtterance(currentWord);
-    utterance.lang = "en-US";
-    speechSynthesis.speak(utterance);
-
-    document.getElementById("userInput").value = "";
-    document.getElementById("feedback").textContent = "";
-    document.getElementById("feedback").className = "feedback";
-    document.getElementById("answer").textContent = "";
-    document.getElementById("showBtn").classList.add("hidden");
-
+    const u = new SpeechSynthesisUtterance(currentWord);
+    u.lang = "en-US";
+    speechSynthesis.speak(u);
+    userInput.value = "";
+    feedback.textContent = "";
+    showBtn.classList.add("hidden");
     practicedThisSession.add(currentWord);
     updateProgress();
 }
 
-// Move to next word
 function nextWord() {
     if (currentIndex < sessionWords.length - 1) {
         currentIndex++;
         speakCurrentWord();
     } else {
-        alert("🎉 You have practiced all listed words!");
+        alert("All words practiced!");
     }
 }
 
-// Update progress bar
-function updateProgress() {
-    const practicedCount = practicedThisSession.size;
-    const total = words.length;
-    const percent = total === 0 ? 0 : (practicedCount / total) * 100;
-
-    document.getElementById("progressFill").style.width = percent + "%";
-    document.getElementById("progressText").textContent =
-        practicedCount + " / " + total;
-}
-
-// Check spelling
 function checkSpelling() {
-    const input = document.getElementById("userInput").value.trim().toLowerCase();
-    const feedback = document.getElementById("feedback");
-
-    if (input === currentWord) {
+    if (userInput.value.trim().toLowerCase() === currentWord) {
         feedback.textContent = "Correct";
-        feedback.classList.add("correct");
+        feedback.className = "feedback correct";
     } else {
         feedback.textContent = "Incorrect";
-        feedback.classList.add("incorrect");
-        document.getElementById("showBtn").classList.remove("hidden");
+        feedback.className = "feedback incorrect";
+        showBtn.classList.remove("hidden");
     }
 }
 
-// Show correct spelling
 function showAnswer() {
-    document.getElementById("answer").textContent =
-        "Correct spelling: " + currentWord;
+    answer.textContent = "Correct spelling: " + currentWord;
 }
 
-// Toggle word list display
+function updateProgress() {
+    const p = words.length ? practicedThisSession.size / words.length * 100 : 0;
+    progressFill.style.width = p + "%";
+    progressText.textContent = practicedThisSession.size + " / " + words.length;
+}
+
 function toggleWordList() {
-    const box = document.getElementById("wordListBox");
-
-    if (box.classList.contains("hidden")) {
-        updateWordListDisplay();
-        box.classList.remove("hidden");
-    } else {
-        box.classList.add("hidden");
-    }
+    wordListBox.classList.toggle("hidden");
+    updateWordListDisplay();
 }
 
-// Update word list content
 function updateWordListDisplay() {
-    const box = document.getElementById("wordListBox");
-    box.innerHTML = words.length
-        ? "<strong>Listed Words for " + currentProfile + ":</strong><br>" + words.join(", ")
-        : "No words added yet.";
+    wordListBox.innerHTML = words.length
+        ? "<b>Words:</b><br>" + words.join(", ")
+        : "No words added";
 }
 
-// --- Auto-load last profile on page refresh ---
-window.onload = function() {
-    const lastProfile = localStorage.getItem("lastProfile");
-    if (lastProfile && profiles.includes(lastProfile)) {
-        const enteredPIN = prompt(`Enter PIN for ${lastProfile} to access your profile:`);
-        if (enteredPIN === profilePINs[lastProfile]) {
-            currentProfile = lastProfile;
-            document.getElementById("profileSelect").value = currentProfile;
-            loadWords();
-            updateProgress();
-            alert(`✅ Welcome back, ${currentProfile}`);
-        } else {
-            alert("❌ Incorrect PIN! Access denied.");
-            document.getElementById("profileSelect").value = "";
-        }
+document.addEventListener("DOMContentLoaded", () => {
+    const last = localStorage.getItem("lastProfile");
+    if (last && profiles.includes(last)) {
+        profileSelect.value = last;
     }
-};
+});
 </script>
+
+</body>
+</html>
